@@ -10,8 +10,6 @@ CREATE TABLE  IF NOT EXISTS users (
     posts int not null default 0,
     followers int not null default 0,
     following int not null default 0,
-    facebookURL text unique,
-    intagramURL text unique,
     date date  not null default now()
 );
 
@@ -23,7 +21,9 @@ CREATE TABLE  IF NOT EXISTS post (
     title varchar(100) check(length(text) <= 100),
     text text not null check(length(text) < 500),
     bg text ,
-    date date  not null default now()
+    date date  not null default now(),
+    total_likes int not null DEFAULT 0,
+    total_comment INT NOT NULL DEFAULT 0
 );
 
 
@@ -40,7 +40,8 @@ CREATE TABLE  IF NOT EXISTS comment (
 CREATE TABLE  IF NOT EXISTS likes (
     id serial not null primary key,
     postId int not null references post(id) on delete cascade,
-    userid int not null references users(id)  on delete cascade
+    userid int not null references users(id)  on delete cascade,
+    date date NOT NULL DEFAULT now()
 );
 
 CREATE TABLE  IF NOT EXISTS answers (
@@ -63,12 +64,11 @@ CREATE TABLE  IF NOT EXISTS notification (
 CREATE TABLE  IF NOT EXISTS folowers (
     id serial not null primary key,
     ownerid int not null references users(id) on delete cascade,
-    userinfo jsonb
+    followerid int not null references users(id) on delete cascade
 );
 CREATE TABLE  IF NOT EXISTS following (
     id serial not null primary key,
     ownerid int not null references users(id) on delete cascade,
-    userinfo jsonb
+    followingid int not null references users(id) on delete cascade
 );
-
 COMMIT ;

@@ -1,0 +1,11 @@
+import { Router } from "express";
+import PostController from "../controllers/PostController";
+const PostRoute = Router();
+import { VerifyToken } from "../middlewares/jwt";
+PostRoute.post("/post", VerifyToken , PostController.create);
+PostRoute.put("/post", VerifyToken ,PostController.update);
+PostRoute.get("/posts/:userid", VerifyToken ,PostController.getAll);
+PostRoute.get("/post/:id/:userid", VerifyToken ,PostController.getById);
+PostRoute.get("/posts/:search", VerifyToken ,PostController.getByTitleOrText);
+PostRoute.delete("/post", VerifyToken ,PostController.deleteById);
+export default PostRoute;
