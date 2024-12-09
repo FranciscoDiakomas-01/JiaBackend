@@ -11,6 +11,35 @@ dotenv.config()
 
 
 // User Validation
+
+export async function isOwnerAcount(userId : number , passowrd : string , email : string )  : Promise<boolean>{
+    
+    try {
+        if (!userId || isNaN(userId) || !passowrd || !email || !validator.isEmail(email) || passowrd?.length < 8) {
+        return false
+    } else {
+        //compare passwords
+        const response = await db.query('SELECT password FROM users WHERE id = $1 AND email = $2', [userId, email])
+        if (response.rowCount != 0 || response.rowCount != null) {
+            //found a acount
+            const decrypedPassword = CryptoJS.AES.decrypt(String(response.rows[0].password), String(process.env.ENC_PASS)).toString(CryptoJS.enc.Utf8)
+            if (decrypedPassword == passowrd) {
+                return true
+            } else {
+                return false
+            }
+        } else {
+            return false
+        }
+    }
+        return false
+    } catch (error) {
+         return false;
+    }
+    
+}
+
+
 export function CanCreateUser(user : IUser) : boolean {
     try {
         if (validator.isEmail(user.email) && user.password.length >= 8 && user.name && user.lastname) {
@@ -42,6 +71,7 @@ export interface IAuthorization {
   oldPassword: string;
   newPassword?: string;
 }
+
 export async function HasPermitionToModify(reset : IAuthorization) : Promise<boolean | string>{
     try {
         return new Promise((resolve, reject) => {
@@ -80,13 +110,12 @@ export async function HasPermitionToModify(reset : IAuthorization) : Promise<boo
 }
 
 
+
 // Post Validation
 export function CanCreatePost(post: IPOst): boolean  {
     try {
         if (post.text && post.text?.length <= 500 && post.title && !isNaN(post.userid)) {
-            if (post.image_url != "" && !validator.isURL(post.image_url)) {
-                return false
-            }
+           
             return true
         } else {
             return false
@@ -138,8 +167,8 @@ export async function CanDeslike(userid: number, postid: number) {
 
 export async function CanComment(comment : IComment) {
     try {
-        if (!isNaN(comment.userid) && !isNaN(comment.postId) && comment.text.length <= 200) {
-            const { rowCount } = await db.query("SELECT * FROM post WHERE id = $1 LIMIT 1;", [comment.postId]);
+        if (!isNaN(comment.userid) && !isNaN(comment.postid) && comment.text.length <= 200) {
+            const { rowCount } = await db.query("SELECT * FROM post WHERE id = $1 LIMIT 1;", [comment.postid]);
             if (rowCount == 1) {
                 return true
             } else {
@@ -156,7 +185,7 @@ export async function CanComment(comment : IComment) {
 export async function CanChangeComment( userid : number , commentid : number) {
     try {
         if (!isNaN(userid) && !isNaN(commentid)) {
-            const { rowCount, rows } = await db.query("SELECT * FROM comment WHERE userid = $1  AND id = $2 LIMIT 1;", [userid, commentid]);
+            const { rowCount } = await db.query("SELECT * FROM comment WHERE userid = $1  AND id = $2 LIMIT 1;", [userid, commentid]);
             if (rowCount == 1) {
                 return true
             } else {

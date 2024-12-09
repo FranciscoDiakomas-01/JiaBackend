@@ -1,8 +1,10 @@
 import { Request, Response } from 'express'
-import { CanCreateUser, CanUpdateUser, HasPermitionToModify , IAuthorization } from '../services/Validations'
+import { CanCreateUser, CanUpdateUser, HasPermitionToModify , IAuthorization, isOwnerAcount } from '../services/Validations'
 import UserModel from '../model/UserModel'
 import { geretateToken, IPayLoad } from '../middlewares/jwt';
+import CryptoJS from 'crypto-js';
 const userModel = new UserModel();
+import validator from 'validator'
 export interface ILogin {
   email: string,
   password : string
@@ -19,11 +21,13 @@ const UserController = {
         return
       } else {
         userModel.login(login).then(data => {
-          const token = geretateToken(data as IPayLoad)
+
+          const token = CryptoJS.AES.encrypt(geretateToken(data as IPayLoad) , String(process.env.ENC_TOKEN)).toString()      
           res.status(200).json({
-            data: 'sucess',
-            token
-          })
+            data: "sucess",
+            token,
+            id: data,
+          });
           return
         }).catch(err => {
           res.status(401).json({
@@ -37,21 +41,28 @@ const UserController = {
       res.status(400).json({
         error : 'invalid body'
       })
+      return
     }
   } ,
   create: async function (req: Request, res: Response) {
     try {
       if (CanCreateUser(req.body)) {
         userModel.create(req.body)
-          .then(() => {
+          .then((data) => {
+            const token = CryptoJS.AES.encrypt(geretateToken(data as IPayLoad), String(process.env.ENC_TOKEN)).toString();
             res.status(201).json({
               data: "created",
+              token,
+              id : data
             });
+            return
           })
           .catch((err) => {
+            console.log(err)
             res.status(400).json({
               error: "email already exist",
             });
+            return
           });
       } else {
         res.status(400).json({
@@ -76,11 +87,13 @@ const UserController = {
         res.status(200).json({
           data,
         });
+        return
       })
       .catch((err) => {
         res.status(400).json({
           err,
         });
+        return
       });
     return;
   },
@@ -98,11 +111,13 @@ const UserController = {
         res.status(200).json({
           data,
         });
+        return
       })
       .catch((err) => {
         res.status(400).json({
           err,
         });
+        return
       });
     return;
   },
@@ -124,51 +139,68 @@ const UserController = {
         res.status(200).json({
           data,
         });
+        return
       })
       .catch((err) => {
         res.status(400).json({
           err,
         });
+        return
       });
     return;
   },
   resetPassword: async function (req: Request, res: Response) {
     try {
-      HasPermitionToModify(req.body)
-        .then((data) => {
-          const reset: IAuthorization = req.body;
-          userModel
-            .ResetPassword(reset.id, String(reset.newPassword))
+      //caso esteje vermelho é o typescript nada esta errado kkkk !
+      const userId = req.user;
+      //veficar as senhas
+      const { email, password, newPassword } = req.body;
+      if (!validator.isEmail(email) || password?.length < 8 || newPassword?.length < 8) {
+        res.status(400).json({
+          error: "invalid body",
+        });
+        return
+      }
+      const isOwner = await isOwnerAcount(userId, password, email);
+      if (isOwner) {
+          userModel.ResetPassword(userId, newPassword)
             .then(() => {
               res.status(200).json({
                 data: "updated",
               });
+              return;
             })
             .catch((err) => {
               res.status(400).json({
                 error: err,
               });
+              return;
             });
-        })
-        .catch((err) => {
-          res.status(400).json({
-            error: err,
+      } else {
+          res.status(401).json({
+            error: "ins´nt your acount",
           });
           return;
-        });
+      }
+    
       return;
     } catch (error) {
       res.status(400).json({
         error: "invalid body",
       });
+      return
     }
   },
   deleteById: async function (req: Request, res: Response) {
     try {
-      HasPermitionToModify(req.body)
-        .then((data) => {
-          const reset: IAuthorization = req.body;
-          userModel.deletebyId(reset.id).then(() => {
+      //caso esteje vermelho é o typescript nada esta errado kkkk !
+      const userId = req.user;
+      //veficar as senhas
+      const { email, password } = req.body
+      const isOwner = await isOwnerAcount(userId, password, email)
+      if (isOwner) {
+        userModel.deletebyId(userId).then(() => {
+              res.clearCookie('token')
               res.status(200).json({
                 data: "deleted",
               });
@@ -179,14 +211,12 @@ const UserController = {
               });
             });
           return
+      } else {
+        res.status(401).json({
+          error : 'ins´nt your acount'
         })
-        .catch((err) => {
-          res.status(400).json({
-            error: err,
-          });
-          return;
-        });
-      return;
+        return
+      }
     } catch (error) {
       res.status(400).json({
         error: "invalid body",
@@ -197,38 +227,37 @@ const UserController = {
 
   update: async function (req: Request, res: Response) {
     try {
-      if (!req.body?.id || isNaN(req.body.id)) {
-        res.status(400).json({
-          error : 'invalid id'
-        })
-      }
-      
+      //caso esteje vermelho é o typescript nada esta errado kkkk !
+      const userId = req.user;
       //verify Permition
-      HasPermitionToModify(req.body).then((data) => {
-        //validate
-          if(CanUpdateUser(req.body)){
-            userModel.updateUser(req.body).then(() => {
+      const { email, password } = req.body;
+      const isOwner = await isOwnerAcount(userId, password, email);
+      if (isOwner) {
+        if (CanUpdateUser(req.body)) {
+          req.body.id = userId;
+          userModel.updateUser(req.body).then(() => {
               res.status(200).json({
                 data: "updated",
               });
+              return;
             }).catch((err) => {
               res.status(400).json({
                 error: err,
               });
-              return
+              return;
             });
-          } else {
-            res.status(400).json({
-              error : 'invalid body'
-            })
-          }
-          
-      }).catch((err) => {
+        } else {
           res.status(400).json({
-            error: err,
+            error: "invalid body",
           });
           return;
+        }
+      } else {
+        res.status(400).json({
+          error: 'this ins´nt your account',
         });
+        return;
+      }
       return;
     } catch (error) {
       res.status(400).json({

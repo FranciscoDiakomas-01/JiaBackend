@@ -11,13 +11,13 @@ export default class UserModel {
   private sqlQuery: string = "";
   public async create(user: IUser) {
     const password = CryptoJS.AES.encrypt(user.password,String(process.env.ENC_PASS)).toString();
-    this.sqlQuery ="INSERT INTO users(name , lastname , email , password) VALUES($1 , $2 , $3 , $4)";
+    this.sqlQuery ="INSERT INTO users(name , lastname , email , password) VALUES($1 , $2 , $3 , $4) RETURNING id;";
     return new Promise((resolve, reject) => {
       db.query(this.sqlQuery,[user.name.toLowerCase(), user.lastname.toLocaleLowerCase(), user.email, password],(err, result) => {
           if (err) {
             reject(err.message);
           } else {
-            resolve(true);
+            resolve(result.rows[0].id);
           }
         }
       );
@@ -37,7 +37,7 @@ export default class UserModel {
         } else {
           const decryptedPass = CryptoJS.AES.decrypt(result.rows[0].password, String(process.env.ENC_PASS)).toString(CryptoJS.enc.Utf8);
           if (decryptedPass == login.password) {
-            resolve(result.rows[0])
+            resolve(result.rows[0].id)
             return
           } else {
             reject('invalid password')
@@ -50,7 +50,7 @@ export default class UserModel {
     });
   }
   public async ResetPassword(id: number, newPassword: string) {
-    const password = CryptoJS.AES.encrypt(newPassword,String(process.env.ENC_PASS)).toString();
+    const password = CryptoJS.AES.encrypt(newPassword, String(process.env.ENC_PASS)).toString();
     this.sqlQuery = "UPDATE users  SET password = $1 WHERE id = $2;";
     return new Promise((resolve, reject) => {db.query(this.sqlQuery, [password, id], (err, result) => {
         if (err) {
@@ -75,7 +75,7 @@ export default class UserModel {
     });
   }
   public async getAll(limit: number = 20, page: number = 1) {
-    this.sqlQuery ="SELECT id, name , lastname , email , bio , followers, following , posts ,  to_char(date , 'DD/MM/YYYY') as date FROM USERS LIMIT $1 OFFSET $2";
+    this.sqlQuery ="SELECT id, name , lastname , email , bio ,  to_char(date , 'DD/MM/YYYY') as date FROM USERS LIMIT $1 OFFSET $2";
     const offset: number = (page - 1) * limit;
     const { rowCount } = await db.query("SELECT * FROM users;");
     const laspage = Math.ceil(Number(rowCount) / limit);
@@ -99,7 +99,7 @@ export default class UserModel {
     if (isNaN(id) || !id) {
       return "invalid id";
     }
-    this.sqlQuery ="SELECT id , name , lastname , email  , bio , followers, following , posts ,  to_char(date , 'DD/MM/YYYY') as date FROM USERS WHERE id = $1";
+    this.sqlQuery ="SELECT id , name , lastname , email  , bio ,  to_char(date , 'DD/MM/YYYY') as date FROM USERS WHERE id = $1";
     return new Promise((resolve, reject) => {
       db.query(this.sqlQuery, [id], (err, result) => {
         if (err) {

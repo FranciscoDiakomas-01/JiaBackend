@@ -8,7 +8,7 @@ export default class CommentModel {
     return new Promise((resolve, reject) => {
       db.query(
         this.sqlQuery,
-        [comment.userid, comment.postId, comment.text],
+        [comment.userid, comment.postid, comment.text],
         (err, result) => {
           if (err) {
             reject("user not found");

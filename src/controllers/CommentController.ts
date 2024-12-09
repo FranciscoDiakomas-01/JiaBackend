@@ -8,15 +8,14 @@ const commentModel = new CommentModel();
 const CommentController = {
   create: async function (req: Request, res: Response) {
     try {
-      if (!req.body.postid || isNaN(req.body.postid) || req.body.text?.length == 0 ||  req.body.text?.length > 200) {
+      if (!req.body.postid || isNaN(req.body.postid) || req.body.text?.length == 0 || req.body.text?.length > 200) {
           res.status(400).json({
             eror: "invalid postid or text",
           });
           return;
         }
       const comment: IComment = req.body
-      const id = Number(getIdIndToken(String(req.headers['authorization']))) 
-      comment.userid = id
+      comment.userid =  req.user
       const can = await CanComment(comment);
       if (can) {
         commentModel.create(comment).then(() => {
@@ -43,22 +42,23 @@ const CommentController = {
     }
   },
   update: async function (req: Request, res: Response) {
-      try {
-          if (!req.body?.commentid || isNaN(req.body?.commentid) || req.body?.text?.length == 0 ) {
+    try {
+        const commentid = Number(req.params.commentid )
+          if (!commentid || isNaN(Number(commentid)) || req.body?.text?.length == 0  || req.body?.text?.length > 200 ) {
             res.status(400).json({
               eror: "invalid commentid or text",
             });
             return;
           }
       
-        const userId = Number(getIdIndToken(String(req.headers["authorization"])));
-        const can = await CanChangeComment(userId, Number(req.body.commentid));
+        const userId = req.user ;
+        const can = await CanChangeComment(userId, Number(commentid));
           if (can) {
-            commentModel.update(req.body?.commentid, req.body?.text).then(data => {
+            commentModel.update(commentid, req.body?.text).then(data => {
                   res.status(201).json({
                     data: data,
                   });
-                  return;
+                return;
             }).catch(err => {
                   res.status(400).json({
                     eror: err

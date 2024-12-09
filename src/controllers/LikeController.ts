@@ -7,8 +7,10 @@ const LikeController = {
 
   like: async function (req: Request, res: Response) {
     try {
-      const like : ILike = req.body
-      const can = await CanLike(like.userid, like.postid)
+      const userId = req.user
+      const like: ILike = req.body
+      like.userid = userId
+      const can = await CanLike(userId, like.postid);
         if(can){
             likemodel.like(like).then(data => {
               res.status(201).json({
@@ -37,7 +39,9 @@ const LikeController = {
   },
   deslike: async function (req: Request, res: Response) {
      try {
-      const like : ILike = req.body
+      const userId = req.user;
+      const like: ILike = req.body;
+      like.userid = userId;
       const can = await CanDeslike(like.userid, like.postid)
         if(can){
             likemodel.deslike(like).then(data => {
@@ -47,7 +51,7 @@ const LikeController = {
               return
           }).catch(er => {
               res.status(400).json({
-                  error : 'invalid userid or postid'
+                  error : 'invalid postid'
               })
               return
           })

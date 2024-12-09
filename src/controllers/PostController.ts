@@ -6,13 +6,17 @@ const post = new PostModel()
 const PostController = {
   create: async function (req: Request, res: Response) {
     try {
+      req.body.userid = Number(req.user);
       if (CanCreatePost(req.body)) {
-        post.create(req.body).then((data) => {
+        post
+          .create(req.body)
+          .then((data) => {
             res.status(201).json({
               data: "created",
             });
             return;
-          }).catch((error) => {
+          })
+          .catch((error) => {
             res.status(404).json({
               eror: error,
             });
@@ -31,39 +35,45 @@ const PostController = {
     }
   },
   update: async function (req: Request, res: Response) {
-      try {
-          if (!req.body.postid || isNaN(req.body.postid) || !req.body.userid || isNaN(req.body.userid)) {
-               res.status(400).json({
-                 eror: "invalid postid or userid",
-               });
-               return;
-          }
-          const isOwner = await isPostOwner(Number(req.body.postid), Number(req.body.userid));
-          if (isOwner) {
-                 if (CanCreatePost(req.body)) {
-                   post.update(req.body).then(() => {
-                       res.status(201).json({
-                         data: "updated",
-                       });
-                       return;
-                     }).catch((error) => {
-                       res.status(404).json({
-                         eror: error,
-                       });
-                       return;
-                     });
-                 } else {
-                   res.status(400).json({
-                     eror: "invalid body or image url",
-                   });
-                   return;
-                 }
-          } else {
-              res.status(401).json({
-                  err : 'this is`nt your post'
-              })
-              return
-          }
+    try {
+      if (!req.body.postid || isNaN(req.body.postid)) {
+        res.status(400).json({
+          eror: "invalid postid",
+        });
+        return;
+      }
+      const isOwner = await isPostOwner(
+        Number(req.body.postid),
+        Number(req.user)
+      );
+      if (isOwner) {
+        if (CanCreatePost(req.body)) {
+          post
+            .update(req.body)
+            .then(() => {
+              res.status(201).json({
+                data: "updated",
+              });
+              return;
+            })
+            .catch((error) => {
+              res.status(404).json({
+                eror: error,
+              });
+              return;
+            });
+        } else {
+          res.status(400).json({
+            eror: "invalid body or image url",
+          });
+          return;
+        }
+      } else {
+        res.status(401).json({
+          err: "this is`nt your post",
+        });
+        return;
+      }
     } catch (error) {
       res.status(400).json({
         error: "invalid body",
@@ -76,7 +86,7 @@ const PostController = {
       let page = Number(req.query.page);
       limit = isNaN(limit) ? 20 : limit;
       page = isNaN(page) ? 1 : page;
-      const userid: number = Number(req.params.userid);
+      const userid: number = Number(req.user);
       if (isNaN(userid)) {
         res.status(400).json({
           error: "invalid userid",
@@ -102,14 +112,43 @@ const PostController = {
   getById: async function (req: Request, res: Response) {
     try {
       const id: number = Number(req.params.id);
-      const userid: number = Number(req.params.userid);
+      const userid: number = Number(req.user);
       if (isNaN(id) || isNaN(userid)) {
         res.status(400).json({
-          error: "invalid postid or userid",
+          error: "invalid postid",
         });
         return;
       }
-      post.getById(id , userid)
+      post
+        .getById(id, userid)
+        .then((data) => {
+          res.status(201).json({ data });
+          return;
+        })
+        .catch((error) => {
+          res.status(404).json({ eror: error });
+          return;
+        });
+    } catch (error) {
+      res.status(400).json({
+        error: "invalid id",
+      });
+    }
+  },
+  getByUserId: async function (req: Request, res: Response) {
+    try {
+      let limit = Number(req.query.limit);
+      let page = Number(req.query.page);
+      limit = isNaN(limit) ? 20 : limit;
+      page = isNaN(page) ? 1 : page;
+      const userid: number = Number(req.params.id);
+      if (isNaN(userid)) {
+        res.status(400).json({
+          error: "invalid postid",
+        });
+        return;
+      }
+      post.getByUserId(userid,page , limit)
         .then((data) => {
           res.status(201).json({ data });
           return;
@@ -152,15 +191,17 @@ const PostController = {
   },
   deleteById: async function (req: Request, res: Response) {
     try {
-        if (!req.body.postid || isNaN(req.body.postid) || !req.body.userid || isNaN(req.body.userid)) {
-               res.status(400).json({
-                 eror: "invalid postid or userid",
-               });
-               return;
-          }
-        const isOwner = await isPostOwner(Number(req.body.postid), Number(req.body.userid));
-        if (isOwner) {
-        post.deleteById(req.body.postid)
+      const postId: number = Number(req.params.postid);
+      if (!postId || isNaN(postId)) {
+        res.status(400).json({
+          eror: "invalid postid",
+        });
+        return;
+      }
+      const isOwner = await isPostOwner(Number(postId), req.user);
+      if (isOwner) {
+        post
+          .deleteById(postId)
           .then((data) => {
             res.status(201).json({ data });
             return;
@@ -169,12 +210,12 @@ const PostController = {
             res.status(404).json({ eror: error });
             return;
           });
-        }else {
-              res.status(401).json({
-                  err : 'this is`nt your post'
-              })
-              return
-          }
+      } else {
+        res.status(401).json({
+          err: "this is`nt your post",
+        });
+        return;
+      }
     } catch (error) {
       res.status(400).json({
         error: "invalid id",
