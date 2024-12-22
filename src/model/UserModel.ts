@@ -118,7 +118,7 @@ export default class UserModel {
     const offset: number = (page - 1) * limit;
     const { rowCount } = await db.query(`SELECT * FROM users WHERE name LIKE '%${search}%' or lastname LIKE '%${search}%';`);
     const laspage = Math.ceil(Number(rowCount) / limit);
-    this.sqlQuery = `SELECT id ,name , lastname , email  , bio , followers, following , posts ,  to_char(date , 'DD/MM/YYYY') as date  FROM users WHERE name LIKE '%${search.toLocaleLowerCase()}%' or lastname LIKE '%${search.toLocaleLowerCase()}%' LIMIT $1 OFFSET $2;`;
+    this.sqlQuery = `SELECT id ,name , lastname , email  , bio , to_char(date , 'DD/MM/YYYY') as date  FROM users WHERE name LIKE '%${search.toLocaleLowerCase()}%' or lastname LIKE '%${search.toLocaleLowerCase()}%' LIMIT $1 OFFSET $2;`;
     return new Promise((resolve, reject) => {
       db.query(this.sqlQuery, [limit, offset], (err, result) => {
         if (err) {

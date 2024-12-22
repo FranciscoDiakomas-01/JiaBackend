@@ -114,8 +114,7 @@ const CommentController = {
             return;
           }
       
-        const userId = Number(getIdIndToken(String(req.headers["authorization"])));
-        const can = await CanChangeComment(userId, Number(req.params.commentid));
+        const can = await CanChangeComment(req.user, Number(req.params.commentid) , Number(req.query?.post));
           if (can) {
             commentModel.deleteById(Number(req.params?.commentid)).then(data => {
                   res.status(201).json({

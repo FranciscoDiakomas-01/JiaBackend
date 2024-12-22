@@ -38,7 +38,7 @@ export default class CommentModel {
   }
 
   public async getAll(limit: number = 20, page: number = 1, postid: number) {
-    this.sqlQuery = `SELECT comment.id as commentid , to_char(comment.date , 'DD/MM/YYYY') as commentdate , comment.text as text , comment.id as commentid  , users.id as userid ,users.name as username , users.lastname as userlastname , users.email as useremail from comment join users on comment.userid = users.id  WHERE comment.postid = $1  LIMIT $2 OFFSET $3`;
+    this.sqlQuery = `SELECT comment.id as commentid , to_char(comment.date , 'DD/MM/YYYY') as commentdate , comment.text as text , comment.id as commentid  , users.id as userid ,users.name as username , users.lastname as userlastname , users.email as useremail from comment join users on comment.userid = users.id  WHERE comment.postid = $1 ORDER BY comment.id DESC LIMIT $2 OFFSET $3`;
 
     const offset: number = (page - 1) * limit;
     const { rowCount } = await db.query("SELECT id from comment WHERE comment.postid = $1" , [postid]);

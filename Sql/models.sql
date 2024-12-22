@@ -26,7 +26,7 @@ CREATE TABLE  IF NOT EXISTS post (
 CREATE TABLE  IF NOT EXISTS comment (
     id serial not null primary key,
     text text not null check(length(text) < 200),
-    postId int not null references post(id),
+    postId int not null references post(id) on delete cascade,
     date date not null default now(),
     userid int not null references users(id)  on delete cascade
 );

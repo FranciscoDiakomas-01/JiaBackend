@@ -182,14 +182,21 @@ export async function CanComment(comment : IComment) {
     }
 }
 
-export async function CanChangeComment( userid : number , commentid : number) {
+export async function CanChangeComment( userid : number , commentid : number , postid : number = -1) : Promise<boolean>{
     try {
+        
         if (!isNaN(userid) && !isNaN(commentid)) {
-            const { rowCount } = await db.query("SELECT * FROM comment WHERE userid = $1  AND id = $2 LIMIT 1;", [userid, commentid]);
+            //!verificando se é dono do comentário
+            const { rowCount } = await db.query("SELECT id FROM comment WHERE userid = $1  AND id = $2 LIMIT 1;", [userid, commentid]);
             if (rowCount == 1) {
                 return true
             } else {
-                return false
+                //*caso seje dono da publicação
+                if(postid < 0){
+                    return false
+                }
+                 const { rowCount } = await db.query("SELECT id FROM post WHERE userid = $1  AND id = $2 LIMIT 1;", [userid, postid]);
+                 return rowCount == 1
             }
         } else {
             return false
