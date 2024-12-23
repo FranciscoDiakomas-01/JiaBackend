@@ -125,6 +125,19 @@ export function CanCreatePost(post: IPOst): boolean  {
     }
 }
 
+export function CanUpdatePost(post: IPOst): boolean  {
+    try {
+        if (post.text && post.text?.length <= 500 && post.title && !isNaN(post.postid)) {
+           
+            return true
+        } else {
+            return false
+        }
+    } catch (error) {
+        return false
+    }
+}
+
 export async function isPostOwner(id : number , userid : number): Promise<boolean> {
     try {
         const { rowCount } = await db.query("SELECT * FROM post WHERE id = $1 AND userid = $2 LIMIT 1;", [id, userid]);

@@ -48,10 +48,5 @@ CREATE TABLE  IF NOT EXISTS notification (
     postid int not null references post(id) on delete cascade
 );
 
-CREATE TABLE  IF NOT EXISTS folowers (
-    id serial not null primary key,
-    ownerid int not null references users(id) on delete cascade,
-    followerid int not null references users(id) on delete cascade
-);
 
 COMMIT ;

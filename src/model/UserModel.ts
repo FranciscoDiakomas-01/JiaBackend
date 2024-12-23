@@ -99,13 +99,30 @@ export default class UserModel {
     if (isNaN(id) || !id) {
       return "invalid id";
     }
-    this.sqlQuery ="SELECT id , name , lastname , email  , bio ,  to_char(date , 'DD/MM/YYYY') as date FROM USERS WHERE id = $1";
+    this.sqlQuery ="SELECT id , name , lastname , email  , bio FROM USERS WHERE id = $1";
     return new Promise((resolve, reject) => {
       db.query(this.sqlQuery, [id], (err, result) => {
         if (err) {
           reject(err.message);
+          return
         } else {
-          resolve(result.rowCount != 0 ? result.rows[0] : "not found");
+
+          const userdata = result.rows[0]
+          //total Posts
+          this.sqlQuery = "SELECT id FROM post WHERE userid = $1";
+          db.query(this.sqlQuery, [id]).then((data =>{
+            const totalPosts = data.rowCount
+            //total Comments
+           resolve(
+             userdata ? { userdata, totalPosts } : "not found"
+           );
+           return;
+          })).catch(err => {
+            reject(err)
+            return
+          })
+
+
         }
       });
     });

@@ -56,7 +56,7 @@ const CommentController = {
           if (can) {
             commentModel.update(commentid, req.body?.text).then(data => {
                   res.status(201).json({
-                    data: data,
+                    data: "updated",
                   });
                 return;
             }).catch(err => {

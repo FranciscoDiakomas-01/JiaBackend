@@ -1,6 +1,6 @@
 import { Request , Response } from "express";
 import PostModel from "../model/PostModel";
-import { CanCreatePost, HasPermitionToModify, IAuthorization, isPostOwner } from "../services/Validations";
+import { CanCreatePost, CanUpdatePost, HasPermitionToModify, IAuthorization, isPostOwner } from "../services/Validations";
 const post = new PostModel()
 
 const PostController = {
@@ -24,7 +24,7 @@ const PostController = {
           });
       } else {
         res.status(400).json({
-          eror: "invalid body or image url",
+          eror: "invalid body",
         });
         return;
       }
@@ -47,7 +47,7 @@ const PostController = {
         Number(req.user)
       );
       if (isOwner) {
-        if (CanCreatePost(req.body)) {
+        if (CanUpdatePost(req.body)) {
           post
             .update(req.body)
             .then(() => {
@@ -64,7 +64,7 @@ const PostController = {
             });
         } else {
           res.status(400).json({
-            eror: "invalid body or image url",
+            eror: "invalid body",
           });
           return;
         }
