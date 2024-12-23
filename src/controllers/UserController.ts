@@ -229,6 +229,7 @@ const UserController = {
     try {
       //caso esteje vermelho é o typescript nada esta errado kkkk !
       const userId = req.user;
+      console.log(userId)
       //verify Permition
       const { email, password } = req.body;
       const isOwner = await isOwnerAcount(userId, password, email);
