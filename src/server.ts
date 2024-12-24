@@ -4,7 +4,6 @@ import { runMigrations } from './database/runMigration'
 import UserRouter from './routes/UserRoute';
 import PostRoute from './routes/PostRoute';
 import LikeRouter from './routes/LikeRoute';
-import cookieParser from 'cookie-parser'
 import CommentRoute from './routes/CommentRoute';
 import cors from 'cors'
 dotenv.config();
@@ -13,12 +12,9 @@ async function RunServer() {
     const server: Application = express();
     
     //global middlewares
-    server.use(
-      cors({origin: String(process.env.CLIENT),})
-    );
+    server.use(cors());
     server.use(express.json())
     server.use(express.urlencoded({ extended: true }))
-    server.use(cookieParser())
     //routes
     server.use(UserRouter)
     server.use(PostRoute);
