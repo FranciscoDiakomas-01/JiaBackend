@@ -4,11 +4,7 @@ import dotenv from 'dotenv'
 dotenv.config()
 
 const db = new Pool({
-  database: String(process.env.DB_NAME),
-  host: String(process.env.DB_HOST),
-  password: process.env.DB_PASSWORD,
-  port: Number(process.env.DB_PORT),
-  user: String(process.env.DB_USER),
+  connectionString: String(process.env.DB_URL),
 });
 
 db.connect((error) => {
