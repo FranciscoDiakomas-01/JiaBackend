@@ -2,15 +2,11 @@
   "name": "base",
   "version": "1.0.0",
   "main": "index.js",
-  "engines": {
-    "node": ">=14.0.0"
-  },
   "scripts": {
     "prebuild": "npm install typescript",
     "dev": "npx tsx --watch ./src/server.ts",
-    "start": "node ./dist/server.js",
-    "build:dev": "npx tsup ./src",
-    "build": "echo 'No build step required'"
+    "build": "npx tsup ./src",
+    "start": "node ./dist/server.js"
   },
   "keywords": [],
   "author": "",
