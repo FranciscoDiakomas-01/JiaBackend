@@ -1,9 +1,13 @@
 {
   "name": "base",
   "version": "1.0.0",
-  "main": "index.js",
+  "main": "index.js", 
+  "engines": {
+    "node": ">=14.0.0"
+  },
   "scripts": {
-    "dev": "npx  tsx --watch ./src/server.ts",
+    "prebuild": "npm install typescript",
+    "dev": "npx tsx --watch ./src/server.ts",
     "start": "node ./dist/server.js",
     "build": "npx tsup ./src"
   },
