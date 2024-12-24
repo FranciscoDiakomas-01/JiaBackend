@@ -40,13 +40,4 @@ CREATE TABLE  IF NOT EXISTS likes (
 );
 
 
-CREATE TABLE  IF NOT EXISTS notification (
-    id serial not null primary key,
-    type int not null,
-    date date not null default now(),
-    userid int not null references users(id) on delete cascade,
-    postid int not null references post(id) on delete cascade
-);
-
-
 COMMIT ;
